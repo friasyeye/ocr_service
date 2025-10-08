@@ -1,4 +1,4 @@
-# Imagen base con Paddle (incluye Python y dependencias básicas)
+# Imagen base con Paddle (incluye Python)
 FROM paddlepaddle/paddle:2.5.2
 
 # Dependencias del sistema necesarias
@@ -13,8 +13,7 @@ WORKDIR /app
 
 # Copiar requirements y instalar dependencias
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt && \
-    pip uninstall -y opencv-python opencv-contrib-python || true
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar el resto del código
 COPY . .
