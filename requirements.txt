@@ -1,3 +1,4 @@
+flask
 paddleocr
 paddlepaddle
 pdf2image
