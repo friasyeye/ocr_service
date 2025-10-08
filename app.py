@@ -1,40 +1,55 @@
 from flask import Flask, request, jsonify
-import pytesseract
+from paddleocr import PaddleOCR
 from PIL import Image
-import io
-import base64
+import io, base64
+import numpy as np
+from pdf2image import convert_from_bytes
 
 app = Flask(__name__)
 
+# Inicializamos PaddleOCR con español (también reconoce catalán decentemente)
+ocr = PaddleOCR(use_angle_cls=True, lang='es')
+
 @app.route('/')
 def index():
-    return jsonify({"message": "OCR service running", "status": "ok"})
+    return jsonify({"message": "OCR service running with PaddleOCR", "status": "ok"})
 
 @app.route('/ocr', methods=['POST'])
-def ocr():
+def ocr_endpoint():
     try:
-        # Caso 1: Imagen enviada como archivo (multipart/form-data)
+        # Caso 1: archivo enviado como multipart/form-data
         if 'file' in request.files:
             file = request.files['file']
-            if file.filename == '':
-                return jsonify({"error": "No selected file"}), 400
+            filename = file.filename.lower()
 
-            image = Image.open(file.stream)
+            if filename.endswith('.pdf'):
+                # Convertir PDF escaneado en imágenes (todas las páginas)
+                images = convert_from_bytes(file.read())
+                texts = []
+                for img in images:
+                    results = ocr.ocr(np.array(img), cls=True)
+                    for line in results[0]:
+                        texts.append(line[1][0])
+                return jsonify({"text": "\n".join(texts)})
 
-        else:
-            # Caso 2: Imagen enviada en JSON como base64
-            data = request.get_json(silent=True)
-            if not data or 'image_base64' not in data:
-                return jsonify({"error": "No image provided"}), 400
+            else:
+                # Imagen (jpg, png…)
+                image = Image.open(file.stream).convert('RGB')
+                results = ocr.ocr(np.array(image), cls=True)
+                texts = [line[1][0] for line in results[0]]
+                return jsonify({"text": "\n".join(texts)})
 
-            image_base64 = data['image_base64']
+        # Caso 2: JSON con base64
+        data = request.get_json(silent=True)
+        if data and "image_base64" in data:
+            image_base64 = data["image_base64"]
             image_data = base64.b64decode(image_base64)
-            image = Image.open(io.BytesIO(image_data))
+            image = Image.open(io.BytesIO(image_data)).convert('RGB')
+            results = ocr.ocr(np.array(image), cls=True)
+            texts = [line[1][0] for line in results[0]]
+            return jsonify({"text": "\n".join(texts)})
 
-        # Ejecutar OCR con Tesseract
-        text = pytesseract.image_to_string(image, lang="spa")  # español
-
-        return jsonify({"text": text.strip()})
+        return jsonify({"error": "No file or image_base64 provided"}), 400
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
