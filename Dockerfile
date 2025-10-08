@@ -1,24 +1,24 @@
 # Imagen base con Python 3.11
 FROM python:3.11-slim
 
-# Instalamos dependencias del sistema necesarias para pdf2image
+# Instalamos dependencias necesarias para PaddleOCR, pdf2image, OpenCV, etc.
 RUN apt-get update && apt-get install -y \
+    build-essential \
+    libgl1 \
+    libglib2.0-0 \
     poppler-utils \
-    && apt-get clean
+    ffmpeg \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Carpeta de trabajo
 WORKDIR /app
 
-# Copiamos e instalamos dependencias de Python
+# Copiamos requirements.txt e instalamos dependencias Python
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiamos el resto de archivos del proyecto
+# Copiamos el resto del proyecto
 COPY . .
 
-# Exponemos el puerto 5000
 EXPOSE 5000
-
-# Comando por defecto
 CMD ["python", "app.py"]
-
