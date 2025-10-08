@@ -1,7 +1,7 @@
-# Imagen base con Paddle
+# Imagen base con Paddle (incluye Python)
 FROM paddlepaddle/paddle:2.5.2
 
-# Actualizar pip y dependencias del sistema
+# Actualizar pip y librerías básicas del sistema
 RUN apt-get update && apt-get install -y --no-install-recommends \
     poppler-utils \
     libglib2.0-0 \
@@ -12,11 +12,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Carpeta de trabajo
 WORKDIR /app
 
-# Copiar requirements.txt e instalar dependencias
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Instalar dependencias directamente (flask incluido)
+RUN pip install flask paddleocr pdf2image Pillow numpy opencv-python-headless
 
-# Copiar el resto del proyecto
+# Copiar el proyecto (app.py, requirements.txt, etc.)
 COPY . .
 
 EXPOSE 5000
