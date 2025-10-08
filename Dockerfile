@@ -1,27 +1,19 @@
-# Imagen base con Python 3.11
-FROM python:3.11-slim
+# Usa la imagen oficial de Paddle con todo lo necesario a nivel sistema
+FROM paddlepaddle/paddle:2.5.2
 
-# Instalamos dependencias necesarias para PaddleOCR, pdf2image, OpenCV, etc.
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libgl1 \
-    libgl1-mesa-glx \
-    libglib2.0-0 \
-    libsm6 \
-    libxrender1 \
-    libxext6 \
+# Utilidades para PDF -> imagen
+RUN apt-get update && apt-get install -y --no-install-recommends \
     poppler-utils \
-    ffmpeg \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*
 
-# Carpeta de trabajo
 WORKDIR /app
 
-# Copiamos requirements.txt e instalamos dependencias Python
+# Instala dependencias Python (forzamos opencv headless)
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip uninstall -y opencv-python opencv-contrib-python || true
 
-# Copiamos el resto del proyecto
+# Copia el código
 COPY . .
 
 EXPOSE 5000
