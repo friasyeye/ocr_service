@@ -1,32 +1,28 @@
 from flask import Flask, request, jsonify
 from paddleocr import PaddleOCR
-import os
 
 app = Flask(__name__)
 
-# Inicializar OCR (en español por defecto)
-ocr = PaddleOCR(use_angle_cls=True, lang='es')
+# Inicializamos OCR en modo lazy (solo una vez al primer request)
+ocr = None
 
-@app.route("/ping", methods=["GET"])
-def ping():
-    return jsonify({"status": "ok", "message": "OCR service is running"})
+@app.route("/")
+def healthcheck():
+    return jsonify({"status": "ok", "message": "OCR service running"})
 
 @app.route("/ocr", methods=["POST"])
 def run_ocr():
-    if "file" not in request.files:
-        return jsonify({"error": "No file uploaded"}), 400
-    
-    file = request.files["file"]
-    filepath = os.path.join("/tmp", file.filename)
-    file.save(filepath)
+    global ocr
+    if ocr is None:
+        # Inicializa aquí la primera vez que se usa
+        ocr = PaddleOCR(use_angle_cls=True, lang="en")
+    file = request.files['file']
+    image_path = "/tmp/uploaded.png"
+    file.save(image_path)
 
-    result = ocr.ocr(filepath, cls=True)
-
-    text = []
-    for line in result[0]:
-        text.append(line[1][0])
-
-    return jsonify({"text": text})
+    result = ocr.ocr(image_path, cls=True)
+    return jsonify(result)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
+
