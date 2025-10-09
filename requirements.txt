@@ -1,7 +1,7 @@
-flask
-paddleocr
-paddlepaddle
-pdf2image
-Pillow
-numpy
-opencv-python-headless
+flask==2.2.5
+paddlepaddle==2.5.2
+paddleocr==2.7.3
+pdf2image==1.17.0
+Pillow==10.3.0
+numpy==1.26.4
+opencv-python-headless==4.12.0.88
