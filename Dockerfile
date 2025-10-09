@@ -1,6 +1,5 @@
-FROM paddlepaddle/paddle:2.5.2
+FROM paddlepaddle/paddle:2.5.2-python3.9
 
-# Instalar utilidades necesarias
 RUN apt-get update && apt-get install -y --no-install-recommends \
     poppler-utils \
     libglib2.0-0 \
@@ -9,11 +8,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Instalar dependencias Python
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar el código
 COPY . .
 
 EXPOSE 5000
